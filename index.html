@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동화 책장</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Gowun Batang', serif;
+            background-color: #f3efe6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shelf-container {
+            background-color: #2c1a0e;
+            border-radius: 14px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+            padding: 18px;
+            border: 1px solid #4a2e1b;
+        }
+
+        .shelf-board {
+            background: linear-gradient(180deg, #8b5a2b 0%, #5c3a19 100%);
+            border-radius: 4px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            height: 16px;
+        }
+
+        .book-spine {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            border-radius: 4px 4px 2px 2px;
+        }
+
+        .book-spine:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        ::-webkit-scrollbar {
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <!-- Top Right: Small Book Icon + Book Count -->
+    <div class="w-full max-w-2xl flex justify-end mb-2.5 px-1">
+        <div class="bg-white/80 backdrop-blur-md border border-stone-200 shadow-sm rounded-lg px-2 py-0.5 text-xs font-bold text-stone-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-book text-stone-500 text-[10px]"></i>
+            <span id="bookCount">0</span>
+        </div>
+    </div>
+
+    <!-- Main Floating Bookshelf Structure -->
+    <main class="w-full max-w-2xl">
+        <div class="shelf-container">
+            <div class="bg-[#1a0f08] rounded-lg p-3 sm:p-4 shadow-inner">
+                
+                <!-- Horizontal Books Row -->
+                <div id="booksContainer" class="flex items-end justify-start space-x-2.5 overflow-x-auto min-h-[210px] sm:min-h-[240px] pb-1 px-1">
+                    
+                    <!-- Plus Book (Vertical Book Spine Shape with '+' Symbol) -->
+                    <div id="addBookBtn" onclick="openModal()" 
+                         class="book-spine flex-shrink-0 w-10 sm:w-11 h-44 sm:h-52 bg-amber-900/40 border border-amber-600/40 hover:bg-amber-800/60 hover:border-amber-400 flex items-center justify-center text-amber-200 shadow-md">
+                        <i class="fa-solid fa-plus text-xl"></i>
+                    </div>
+
+                </div>
+
+                <!-- Shelf Board -->
+                <div class="shelf-board mt-1"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Title & Link Only -->
+    <div id="bookModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-stone-100">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-700">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <form id="addBookForm" onsubmit="handleBookSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="bookTitle" class="block text-xs font-bold text-stone-600 mb-1">제목</label>
+                    <input type="text" id="bookTitle" required placeholder="제목 입력" 
+                           class="w-full px-3.5 py-2 rounded-xl border border-stone-200 focus:border-amber-700 focus:outline-none bg-stone-50 text-stone-900 text-sm">
+                </div>
+
+                <div>
+                    <label for="bookLink" class="block text-xs font-bold text-stone-600 mb-1">링크</label>
+                    <input type="url" id="bookLink" required placeholder="링크 (URL) 입력" 
+                           class="w-full px-3.5 py-2 rounded-xl border border-stone-200 focus:border-amber-700 focus:outline-none bg-stone-50 text-stone-900 text-sm">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-stone-900 hover:bg-black text-white font-medium py-2.5 rounded-xl text-sm shadow transition duration-150 mt-2">
+                    등록
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const bookColors = [
+            '#8d3a3a', '#2d5a7b', '#2e6b52', '#c47327', '#5a3d7c', '#795238', '#2b6969'
+        ];
+
+        // 기본 초기 동화책 목록
+        let defaultBooks = [
+            { id: 1710000001, title: "달라진 토리", link: "https://heyzine.com/flip-book/3165d056ee.html", color: "#2d5a7b", height: 195 },
+            { id: 1710000002, title: "학교폭력은 나빠요", link: "https://heyzine.com/flip-book/d6fd60e2c8.html", color: "#8d3a3a", height: 205 },
+            { id: 1710000003, title: "동물시험", link: "https://heyzine.com/flip-book/1e652cd848.html", color: "#2e6b52", height: 185 }
+        ];
+
+        let books = [];
+
+        function loadBooks() {
+            const savedBooks = localStorage.getItem('my_clean_bookshelf_data');
+            if (savedBooks) {
+                try {
+                    books = JSON.parse(savedBooks);
+                    // 만약 기존에 저장된 데이터가 아예 비어있다면 기본 책들로 설정
+                    if (books.length === 0) {
+                        books = defaultBooks;
+                        saveBooks();
+                    }
+                } catch (e) {
+                    books = defaultBooks;
+                }
+            } else {
+                books = defaultBooks;
+                saveBooks();
+            }
+            renderBooks();
+        }
+
+        function saveBooks() {
+            localStorage.setItem('my_clean_bookshelf_data', JSON.stringify(books));
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function renderBooks() {
+            const container = document.getElementById('booksContainer');
+            const addBookBtn = document.getElementById('addBookBtn');
+            const countElement = document.getElementById('bookCount');
+
+            countElement.textContent = books.length;
+
+            const existingBooks = container.querySelectorAll('.generated-book');
+            existingBooks.forEach(el => el.remove());
+
+            books.forEach((book) => {
+                const bookSpine = document.createElement('div');
+                
+                bookSpine.className = 'book-spine generated-book flex-shrink-0 w-10 sm:w-11 rounded-md shadow-md flex flex-col justify-between items-center py-2.5 px-1 group';
+                bookSpine.style.backgroundColor = book.color || '#8d3a3a';
+                bookSpine.style.color = '#ffffff';
+                bookSpine.style.height = `${book.height || 190}px`;
+
+                bookSpine.innerHTML = `
+                    <div class="flex-grow flex items-center justify-center font-medium text-xs tracking-wide truncate my-1">
+                        ${escapeHtml(book.title)}
+                    </div>
+
+                    <button onclick="deleteBook(event, ${book.id})" 
+                            class="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-black/40 hover:bg-red-600 text-white rounded-full p-0.5 z-30">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+
+                bookSpine.onclick = (e) => {
+                    if (e.target.closest('button')) return;
+                    window.open(book.link, '_blank');
+                };
+
+                container.insertBefore(bookSpine, addBookBtn);
+            });
+        }
+
+        function handleBookSubmit(e) {
+            e.preventDefault();
+
+            const titleInput = document.getElementById('bookTitle');
+            const linkInput = document.getElementById('bookLink');
+
+            const title = titleInput.value.trim();
+            let link = linkInput.value.trim();
+
+            if (!title || !link) return;
+
+            if (!/^https?:\/\//i.test(link)) {
+                link = 'https://' + link;
+            }
+
+            const newBook = {
+                id: Date.now(),
+                title: title,
+                link: link,
+                color: bookColors[Math.floor(Math.random() * bookColors.length)],
+                height: Math.floor(Math.random() * 30) + 180
+            };
+
+            books.push(newBook);
+            saveBooks();
+            renderBooks();
+
+            titleInput.value = '';
+            linkInput.value = '';
+            closeModal();
+        }
+
+        function deleteBook(e, id) {
+            e.stopPropagation();
+            books = books.filter(b => b.id !== id);
+            saveBooks();
+            renderBooks();
+        }
+
+        function openModal() {
+            document.getElementById('bookModal').classList.remove('hidden');
+            document.getElementById('bookTitle').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            loadBooks();
+        };
+    </script>
+</body>
+</html>
