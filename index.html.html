@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동화 책장</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Gowun Batang', serif;
+            /* 배경: 짙은 녹차색 + 고급스러운 패브릭/벽지 질감 패터닝 */
+            background-color: #2b3a2b;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(60, 80, 58, 0.5) 0%, rgba(25, 36, 25, 0.95) 100%),
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px);
+            background-size: 100% 100%, 8px 8px, 8px 8px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 목재 무늬 책장 외곽 프레임 */
+        .wood-shelf {
+            background-color: #3d2314;
+            background-image: 
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 8px),
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 12px),
+                linear-gradient(135deg, #4a2c17 0%, #321c0e 50%, #4a2c17 100%);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.6),
+                inset 0 2px 5px rgba(255,255,255,0.2),
+                inset 0 -5px 10px rgba(0,0,0,0.5);
+            border: 10px solid #28160a;
+            border-radius: 8px;
+        }
+
+        /* 책장 내부 수납공간 (목재 내벽 무늬) */
+        .shelf-tier {
+            background-color: #2c180b;
+            background-image: 
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 120px, rgba(0,0,0,0.3) 121px),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 6px),
+                linear-gradient(180deg, #221208 0%, #361e0e 100%);
+            box-shadow: 
+                inset 0 10px 20px rgba(0,0,0,0.7),
+                inset 10px 0 15px rgba(0,0,0,0.5),
+                inset -10px 0 15px rgba(0,0,0,0.5);
+            border-bottom: 12px solid #1a0d06;
+            position: relative;
+        }
+
+        /* 선반 바닥 받침대 */
+        .shelf-tier::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: linear-gradient(180deg, #4d2b15 0%, #291508 100%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        /* 표지가 보이는 전면 진열 책 스타일 */
+        .book-cover {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.4),
+                inset 2px 0 3px rgba(255,255,255,0.2),
+                inset -2px 0 3px rgba(0,0,0,0.3);
+            cursor: pointer;
+            position: relative;
+            transform-origin: bottom center;
+            overflow: hidden;
+        }
+
+        .book-cover:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        /* 표지 이미지 스타일 */
+        .book-cover-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        /* 표지 좌측 접힘선 느낌 (Book Spine Accent) */
+        .book-cover-edge {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.1) 100%);
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* 새 책 추가 버튼 카드 */
+        .add-book-card {
+            border: 2px dashed rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .add-book-card:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.7);
+            transform: translateY(-4px);
+        }
+
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 모달 애니메이션 */
+        .modal-bg {
+            background-color: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 상단 타이틀 & 우측 상단 책 수 표기 -->
+    <div class="w-full max-w-2xl flex justify-between items-end mb-4 px-2">
+        <div>
+            <div class="flex items-center space-x-2 group">
+                <h1 id="bookshelf-title" class="text-3xl font-bold text-amber-100 tracking-wide drop-shadow-md outline-none border-b border-transparent focus:border-amber-300 focus:bg-white/5 rounded px-1" contenteditable="true" spellcheck="false" title="클릭하여 제목 수정">
+                    <i class="fa-solid fa-book-bookmark mr-2 text-amber-200" contenteditable="false"></i>나의 동화 책장
+                </h1>
+                <button onclick="focusTitle()" class="text-amber-200/50 hover:text-amber-200 text-sm opacity-0 group-hover:opacity-100 transition" title="제목 수정하기">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+            </div>
+            <div class="flex items-center space-x-1 group mt-1">
+                <p id="bookshelf-subtitle" class="text-xs text-amber-200/70 outline-none border-b border-transparent focus:border-amber-300 focus:bg-white/5 rounded px-1" contenteditable="true" spellcheck="false" title="클릭하여 부제목 수정">
+                    따뜻한 이야기들이 담긴 2단 목재 책장
+                </p>
+                <button onclick="focusSubtitle()" class="text-amber-200/40 hover:text-amber-200 text-[10px] opacity-0 group-hover:opacity-100 transition" title="부제목 수정하기">
+                    <i class="fa-solid fa-pen text-[9px]"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 우측 상단 책 수 표기 -->
+        <div class="flex items-center space-x-2 bg-white/10 border border-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-inner">
+            <i class="fa-solid fa-books text-white text-base"></i>
+            <span class="text-xs text-white/90 font-medium">총 동화:</span>
+            <span id="book-count" class="text-base font-bold text-white">0</span>
+            <span class="text-xs text-white/90">권</span>
+        </div>
+    </div>
+
+    <!-- 2단 목재 책장 본체 -->
+    <div class="wood-shelf w-full max-w-2xl p-4 sm:p-6 mb-6">
+        <!-- 1단 선반 (위) -->
+        <div class="shelf-tier h-52 rounded-t flex items-end px-4 pb-2 space-x-4 overflow-x-auto no-scrollbar" id="shelf-1"></div>
+        <!-- 2단 선반 (아래) -->
+        <div class="shelf-tier h-52 rounded-b mt-3 flex items-end px-4 pb-2 space-x-4 overflow-x-auto no-scrollbar" id="shelf-2"></div>
+    </div>
+
+    <!-- 동화 추가 모달 창 -->
+    <div id="bookModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-amber-700/50 rounded-xl p-6 w-full max-w-md shadow-2xl text-stone-200">
+            <div class="flex justify-between items-center mb-4 border-b border-stone-700 pb-3">
+                <h3 class="text-lg font-bold text-amber-200"><i class="fa-solid fa-pen-nib mr-2"></i>새 동화 등록</h3>
+                <button onclick="closeModal()" class="text-stone-400 hover:text-stone-100 text-xl font-bold">&times;</button>
+            </div>
+            
+            <form id="addBookForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">동화 제목</label>
+                    <input type="text" id="bookTitle" required placeholder="예: 아기 돼지 삼형제" class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-md focus:outline-none focus:border-amber-500 text-stone-100 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">표지 이미지 첨부</label>
+                    <input type="file" id="bookCoverFile" accept="image/*" required onchange="previewSelectedCover(event)" class="w-full text-xs text-stone-300 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-800 file:text-amber-100 hover:file:bg-amber-700 file:cursor-pointer cursor-pointer bg-stone-800 border border-stone-700 rounded-md">
+                    <div id="coverPreviewContainer" class="hidden mt-2 flex items-center space-x-3 bg-stone-800/80 p-2 rounded border border-stone-700">
+                        <img id="coverPreviewImg" src="" alt="미리보기" class="w-12 h-16 object-cover rounded shadow">
+                        <span class="text-xs text-amber-200/80">표지 이미지 적용됨</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-300 mb-1">연결 링크 (선택 사항)</label>
+                    <input type="url" id="bookLink" placeholder="https://docs.google.com/presentation/d/..." class="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-md focus:outline-none focus:border-amber-500 text-stone-100 text-sm">
+                </div>
+                <div class="flex justify-end space-x-2 pt-4 border-t border-stone-800">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-stone-200 rounded-md text-sm transition">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 font-semibold rounded-md text-sm shadow transition">책장에 꽂기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 책 상세 내용 보기 모달 -->
+    <div id="viewModal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-amber-700/50 rounded-xl p-6 w-full max-w-md shadow-2xl text-stone-200">
+            <div class="flex justify-between items-start mb-4 border-b border-stone-700 pb-3">
+                <div>
+                    <span id="viewCategory" class="text-xs px-2 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-700/50">동화책</span>
+                    <h3 id="viewTitle" class="text-xl font-bold text-amber-100 mt-1">책 제목</h3>
+                    <a id="viewLink" href="#" target="_blank" class="text-xs text-amber-400 hover:underline mt-1 inline-flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        <span id="viewLinkText" class="truncate max-w-[250px]">링크 이동하기</span>
+                    </a>
+                </div>
+                <button onclick="closeViewModal()" class="text-stone-400 hover:text-stone-100 text-xl font-bold">&times;</button>
+            </div>
+            <div class="py-4 text-sm text-stone-300 leading-relaxed min-h-[80px]" id="viewContent">
+                등록된 링크로 이동하거나 아래 삭제 버튼을 클릭할 수 있습니다.
+            </div>
+            <div class="flex justify-between items-center pt-4 border-t border-stone-800">
+                <button onclick="deleteCurrentBook()" class="text-red-400 hover:text-red-300 text-xs flex items-center space-x-1">
+                    <i class="fa-solid fa-trash"></i>
+                    <span>삭제하기</span>
+                </button>
+                <button onclick="closeViewModal()" class="px-4 py-2 bg-amber-800 hover:bg-amber-700 text-amber-100 text-xs font-semibold rounded-md transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_COVER_IMAGE = 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80';
+
+        // 로컬 스토리지에서 책 목록 및 책장 제목 불러오기
+        let stories = JSON.parse(localStorage.getItem('my_fairy_tales')) || [];
+        
+        let selectedBookId = null;
+        let attachedCoverDataUrl = null;
+        const SHELF_CAPACITY = 5;
+
+        window.onload = function() {
+            // 저장된 제목/부제목 불러오기
+            const savedTitle = localStorage.getItem('my_shelf_title');
+            const savedSubtitle = localStorage.getItem('my_shelf_subtitle');
+            
+            if (savedTitle) {
+                document.getElementById('bookshelf-title').innerHTML = `<i class="fa-solid fa-book-bookmark mr-2 text-amber-200" contenteditable="false"></i>` + savedTitle;
+            }
+            if (savedSubtitle) {
+                document.getElementById('bookshelf-subtitle').innerText = savedSubtitle;
+            }
+
+            renderBookshelf();
+        };
+
+        // 제목이나 부제목이 수정될 때 자동 저장 이벤트 리스너 추가
+        document.getElementById('bookshelf-title').addEventListener('blur', function() {
+            // 아이콘 제외한 텍스트만 추출
+            const textOnly = this.innerText.trim();
+            localStorage.setItem('my_shelf_title', textOnly);
+        });
+
+        document.getElementById('bookshelf-subtitle').addEventListener('blur', function() {
+            localStorage.setItem('my_shelf_subtitle', this.innerText.trim());
+        });
+
+        function previewSelectedCover(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                attachedCoverDataUrl = null;
+                document.getElementById('coverPreviewContainer').classList.add('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                attachedCoverDataUrl = e.target.result;
+                const previewImg = document.getElementById('coverPreviewImg');
+                previewImg.src = attachedCoverDataUrl;
+                document.getElementById('coverPreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function focusTitle() {
+            document.getElementById('bookshelf-title').focus();
+        }
+
+        function focusSubtitle() {
+            document.getElementById('bookshelf-subtitle').focus();
+        }
+
+        function renderBookshelf() {
+            const shelf1 = document.getElementById('shelf-1');
+            const shelf2 = document.getElementById('shelf-2');
+            
+            shelf1.innerHTML = '';
+            shelf2.innerHTML = '';
+
+            document.getElementById('book-count').innerText = stories.length;
+
+            // 상태 변경 시 브라우저에 책 목록 저장
+            localStorage.setItem('my_fairy_tales', JSON.stringify(stories));
+
+            const shelf1Books = stories.slice(0, SHELF_CAPACITY);
+            const shelf2Books = stories.slice(SHELF_CAPACITY);
+
+            shelf1Books.forEach(book => {
+                shelf1.appendChild(createBookElement(book));
+            });
+
+            shelf2Books.forEach(book => {
+                shelf2.appendChild(createBookElement(book));
+            });
+
+            const addCard = createAddBookCard();
+            if (stories.length < SHELF_CAPACITY) {
+                shelf1.appendChild(addCard);
+            } else {
+                shelf2.appendChild(addCard);
+            }
+        }
+
+        function createBookElement(book) {
+            const div = document.createElement('div');
+            div.className = `book-cover h-44 w-32 bg-stone-800 border border-stone-900 rounded-r-md flex flex-col justify-between p-3 relative flex-shrink-0 text-amber-100 select-none`;
+            
+            const coverImageSrc = book.coverUrl || DEFAULT_COVER_IMAGE;
+
+            const img = document.createElement('img');
+            img.src = coverImageSrc;
+            img.alt = book.title;
+            img.className = 'book-cover-img';
+            img.onerror = function() {
+                this.src = DEFAULT_COVER_IMAGE;
+            };
+            div.appendChild(img);
+
+            const shadowOverlay = document.createElement('div');
+            shadowOverlay.className = 'absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40 pointer-events-none';
+            div.appendChild(shadowOverlay);
+
+            const edge = document.createElement('div');
+            edge.className = 'book-cover-edge';
+            div.appendChild(edge);
+
+            const content = document.createElement('div');
+            content.className = 'relative z-10 h-full flex flex-col justify-between';
+            content.innerHTML = `
+                <div>
+                    <div class="flex items-center space-x-1 text-[10px] text-amber-200/90 mb-1 drop-shadow">
+                        <i class="fa-solid fa-star text-[8px] text-amber-300"></i>
+                        <span>동화</span>
+                    </div>
+                    <p class="font-bold text-sm text-stone-100 leading-snug line-clamp-3 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                        ${escapeHtml(book.title)}
+                    </p>
+                </div>
+                <div class="text-[10px] text-amber-100 font-medium flex items-center justify-between border-t border-white/20 pt-1.5 backdrop-blur-xs -mx-1 -mb-1 px-1.5 py-0.5 rounded-b">
+                    <span>열기</span>
+                    <i class="fa-solid fa-book-open text-[9px]"></i>
+                </div>
+            `;
+            
+            div.appendChild(content);
+            div.onclick = () => openViewModal(book);
+            return div;
+        }
+
+        function createAddBookCard() {
+            const div = document.createElement('div');
+            div.className = 'add-book-card h-44 w-32 rounded-r-md flex flex-col items-center justify-center cursor-pointer flex-shrink-0 text-amber-100/70 hover:text-amber-100 transition';
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 shadow-inner">
+                    <i class="fa-solid fa-plus text-lg text-amber-200"></i>
+                </div>
+                <span class="text-xs font-semibold">동화 추가</span>
+            `;
+            div.onclick = openModal;
+            return div;
+        }
+
+        function openModal() {
+            attachedCoverDataUrl = null;
+            document.getElementById('coverPreviewContainer').classList.add('hidden');
+            document.getElementById('bookModal').classList.remove('hidden');
+            document.getElementById('bookTitle').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').classList.add('hidden');
+            document.getElementById('addBookForm').reset();
+            attachedCoverDataUrl = null;
+            document.getElementById('coverPreviewContainer').classList.add('hidden');
+        }
+
+        function openViewModal(book) {
+            selectedBookId = book.id;
+            document.getElementById('viewTitle').innerText = book.title;
+            
+            const linkEl = document.getElementById('viewLink');
+            const linkTextEl = document.getElementById('viewLinkText');
+            
+            if (book.link && book.link !== '#') {
+                linkEl.href = book.link;
+                linkTextEl.innerText = book.link;
+                linkEl.classList.remove('hidden');
+            } else {
+                linkEl.classList.add('hidden');
+            }
+
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+            selectedBookId = null;
+        }
+
+        function deleteCurrentBook() {
+            if (selectedBookId !== null) {
+                stories = stories.filter(b => b.id !== selectedBookId);
+                closeViewModal();
+                renderBookshelf();
+            }
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('bookTitle').value.trim();
+            const link = document.getElementById('bookLink').value.trim();
+
+            if (!title) return;
+
+            const newBook = {
+                id: Date.now(),
+                title: title,
+                link: link || '#',
+                coverUrl: attachedCoverDataUrl || DEFAULT_COVER_IMAGE
+            };
+
+            stories.push(newBook);
+            closeModal();
+            renderBookshelf();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
